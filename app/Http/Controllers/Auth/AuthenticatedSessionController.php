@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\LoginRequest;
+use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\Auth\LoginRequest;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -16,17 +17,21 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): JsonResponse
     {
-        $request->authenticate();
+        try {
+            $request->authenticate();
 
-        $user = $request->user();
-        $user->tokens()->delete();
-
-        $token = $user->createToken('api-token');
-        
-        return response()->json([
-            'user' => $user,
-            'token' => $token->plainTextToken
-        ]);
+            $user = $request->user();
+            $user->tokens()->delete();
+    
+            $token = $user->createToken('api-token');
+            
+            return response()->json([
+                'user' => $user,
+                'token' => $token->plainTextToken
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     /**
